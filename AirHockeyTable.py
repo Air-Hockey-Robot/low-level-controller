@@ -12,6 +12,10 @@ class AirHockeyTable:
     def __init__(self, com_port_l, com_port_r, addr_l=0x80, addr_r=0x85):
         self.motor_l = Roboclaw(com_port_l, self.BAUD_RATE)
         self.motor_r = Roboclaw(com_port_r, self.BAUD_RATE)
+
+        self.motor_l.Open()
+        self.motor_r.Open()
+
         self.addr_l = addr_l
         self.addr_r = addr_r
 
@@ -21,10 +25,10 @@ class AirHockeyTable:
         log_file_name = datetime.now().strftime('log_%Y%m%d-%H%M%S.csv')
         self.log_handle = open(log_file_name, 'a')
 
-        header_line = 'time (ns),actual theta1 (ticks),actual theta2 (ticks),target x (m),target y (m)'
+        header_line = 'time (ns),actual theta1 (ticks),actual theta2 (ticks),target x (m),target y (m)\n'
         self.log_handle.write(header_line)
     
-    def _theta2xy(self, theta_l, theta_r):
+    def _theta_to_xy(self, theta_l, theta_r):
         '''Takes motor angles in encoder ticks (2048 ticks per revolution)
         and converts them into cartesian position of the mallet in meters'''
         x = (theta_l + theta_r) * self.PULLEY_RADIUS * pi / self.TICKS_PER_REV
@@ -32,7 +36,7 @@ class AirHockeyTable:
         
         return x, y
 
-    def _xy2theta(self, x, y):
+    def _xy_to_theta(self, x, y):
         '''Takes cartesian position of the mallet (x, y) in meters and converts
         it into motor angles in encoder ticks (2048 ticks per revolution)'''
         theta_l = (x + y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / (2 * pi)
@@ -43,7 +47,7 @@ class AirHockeyTable:
     def command_position(self, x, y):
         '''Command motors to move the mallet to the desired cartesian position.
         Position is interpreted in meters'''
-        theta_l, theta_r = self._xy2theta(x, y)
+        theta_l, theta_r = self._xy_to_theta(x, y)
 
         self.motor_l.SpeedAccelDeccelPositionM1(self.addr_l, 0, 0, 0, theta_l)
         self.motor_r.SpeedAccelDeccelPositionM1(self.addr_r, 0, 0, 0, theta_r)
@@ -58,7 +62,7 @@ class AirHockeyTable:
         enc_l = self.motor_l.ReadEncM1(self.addr_l)
         enc_r = self.motor_r.ReadEncM1(self.addr_r)
         
-        line = f'{time.time_ns()},{enc_l[1]},{enc_r[1]},{self.target_x},{self.target_y}'
+        line = f'{time.time_ns()},{enc_l[1]},{enc_r[1]},{self.target_x},{self.target_y}\n'
         self.log_handle.write(line)
 
     def zero_encoders(self):
