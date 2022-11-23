@@ -23,9 +23,10 @@ class AirHockeyTable:
         self.target_y = 0
 
         log_file_name = datetime.now().strftime('log_%Y%m%d-%H%M%S.csv')
-        self.log_handle = open(log_file_name, 'a')
+        self.log_handle = open('data/' + log_file_name, 'a')
 
-        header_line = 'time (ns),actual theta1 (ticks),actual theta2 (ticks),target x (m),target y (m)\n'
+        header_line = 'time (ns),actual x (m),actual y (m),target x (m),target y (m),' \
+            'left motor current (A),right motor current (A)\n'
         self.log_handle.write(header_line)
     
     def _theta_to_xy(self, theta_l, theta_r):
@@ -49,8 +50,8 @@ class AirHockeyTable:
         Position is interpreted in meters'''
         theta_l, theta_r = self._xy_to_theta(x, y)
 
-        self.motor_l.SpeedAccelDeccelPositionM1(self.addr_l, 0, 0, 0, theta_l)
-        self.motor_r.SpeedAccelDeccelPositionM1(self.addr_r, 0, 0, 0, theta_r)
+        self.motor_l.SpeedAccelDeccelPositionM1(self.addr_l, 100000, 100000, 100000, int(round(theta_l)), 0)
+        self.motor_r.SpeedAccelDeccelPositionM1(self.addr_r, 100000, 100000, 100000, int(round(theta_r)), 0)
 
         self.target_x = x
         self.target_y = y
@@ -59,10 +60,14 @@ class AirHockeyTable:
         '''Write a line to the log file containing information about the state of the system'''
         # might need to use the other elements of the returned tuple
         # see: https://python-roboclaw.readthedocs.io/en/latest/api.html#roboclaw.roboclaw.Roboclaw.read_encoder_m1
-        enc_l = self.motor_l.ReadEncM1(self.addr_l)
-        enc_r = self.motor_r.ReadEncM1(self.addr_r)
+        enc_l = self.motor_l.ReadEncM1(self.addr_l)[1]
+        enc_r = self.motor_r.ReadEncM1(self.addr_r)[1]
         
-        line = f'{time.time_ns()},{enc_l[1]},{enc_r[1]},{self.target_x},{self.target_y}\n'
+        actual_x, actual_y = self._theta_to_xy(enc_l, enc_r)
+
+        current_l, current_r = self.read_motor_currents()
+
+        line = f'{time.time_ns()},{actual_x},{actual_y},{self.target_x},{self.target_y},{current_l},{current_r}\n'
         self.log_handle.write(line)
 
     def zero_encoders(self):
@@ -76,7 +81,7 @@ class AirHockeyTable:
     
     def set_right_motor_PID(self, kp, ki, kd, kimax, deadzone, min, max):
         '''Sets PID gains for position controller of right motor'''
-        self.motor_r.SetM1PositionPID(self.addr_l, kp, ki, kd, kimax, deadzone, min, max)
+        self.motor_r.SetM1PositionPID(self.addr_r, kp, ki, kd, kimax, deadzone, min, max)
 
     def read_left_motor_PID(self):
         '''Reads the PID parameters for the position controller of the left motor.
@@ -88,4 +93,8 @@ class AirHockeyTable:
         Output order: (kp, ki, kd, kimax, deadzone, min, max)'''
         return self.motor_r.ReadM1PositionPID(self.addr_r)
 
-
+    def read_motor_currents(self):
+        '''Reads motor currents'''
+        current_l = self.motor_l.ReadCurrents(self.addr_l)[1] / 100
+        current_r = self.motor_r.ReadCurrents(self.addr_r)[1] / 100
+        return current_l, current_r
