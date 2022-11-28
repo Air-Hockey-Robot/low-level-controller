@@ -43,8 +43,8 @@ class AirHockeyTable:
     def _xy_to_theta(self, x, y):
         '''Takes cartesian position of the mallet (x, y) in meters and converts
         it into motor angles in encoder ticks (2048 ticks per revolution)'''
-        theta_l = (x + y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / (2 * pi)
-        theta_r = (x - y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / (2 * pi)
+        theta_l = (x + y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / pi
+        theta_r = (x - y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / pi
 
         return -theta_l, -theta_r
 
@@ -53,8 +53,8 @@ class AirHockeyTable:
         Position is interpreted in meters'''
         theta_l, theta_r = self._xy_to_theta(x, y)
 
-        self.motor_l.SpeedAccelDeccelPositionM1(self.addr_l, 100000, 100000, 100000, int(round(theta_l)), 0)
-        self.motor_r.SpeedAccelDeccelPositionM1(self.addr_r, 100000, 100000, 100000, int(round(theta_r)), 0)
+        self.motor_l.SpeedAccelDeccelPositionM1(self.addr_l, 300000, 250000, 300000, int(round(theta_l)), 0)
+        self.motor_r.SpeedAccelDeccelPositionM1(self.addr_r, 300000, 250000, 300000, int(round(theta_r)), 0)
 
         self.target_x = x
         self.target_y = y
