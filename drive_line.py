@@ -17,11 +17,11 @@ if __name__ == '__main__':
     start_time = time.time()
     period = 2 #s
     angular_frequency = 2 * math.pi / period #rad/s
-    travel_distance = 0.15 #m
+    travel_distance = 0.10 #m
 
     #Set PID
-    controller.set_left_motor_PID(30, 0, 0, 2090, 0, 0, 10000)
-    controller.set_right_motor_PID(30, 0, 0, 2090, 0, 0, 10000)
+    controller.set_left_motor_PID(50, 1, 0, 2090, 0, 0, 10000)
+    controller.set_right_motor_PID(50, 1, 0, 2090, 0, 0, 10000)
 
     while(1):
         controller.log_current_state()
