@@ -1,6 +1,7 @@
 from roboclaw_3 import Roboclaw
 from datetime import datetime
 from math import pi
+from numpy import NaN
 
 import time
 
@@ -10,6 +11,8 @@ class AirHockeyTable:
     TICKS_PER_REV = 2048 # encoder ticks per motor revolution
 
     def __init__(self, com_port_l, com_port_r, addr_l=0x80, addr_r=0x85):
+        self.start_time = time.time()
+
         self.motor_l = Roboclaw(com_port_l, self.BAUD_RATE)
         self.motor_r = Roboclaw(com_port_r, self.BAUD_RATE)
 
@@ -19,13 +22,13 @@ class AirHockeyTable:
         self.addr_l = addr_l
         self.addr_r = addr_r
 
-        self.target_x = 0
-        self.target_y = 0
+        self.target_x = NaN
+        self.target_y = NaN
 
         log_file_name = datetime.now().strftime('log_%Y%m%d-%H%M%S.csv')
         self.log_handle = open('data/' + log_file_name, 'a')
 
-        header_line = 'time (ns),actual x (m),actual y (m),target x (m),target y (m),' \
+        header_line = 'time (s),actual x (cm),actual y (cm),target x (cm),target y (cm),' \
             'left motor current (A),right motor current (A)\n'
         self.log_handle.write(header_line)
     
@@ -35,7 +38,7 @@ class AirHockeyTable:
         x = (theta_l + theta_r) * self.PULLEY_RADIUS * pi / self.TICKS_PER_REV
         y = (theta_l - theta_r) * self.PULLEY_RADIUS * pi / self.TICKS_PER_REV
         
-        return x, y
+        return -x, -y
 
     def _xy_to_theta(self, x, y):
         '''Takes cartesian position of the mallet (x, y) in meters and converts
@@ -43,7 +46,7 @@ class AirHockeyTable:
         theta_l = (x + y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / (2 * pi)
         theta_r = (x - y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / (2 * pi)
 
-        return theta_l, theta_r
+        return -theta_l, -theta_r
 
     def command_position(self, x, y):
         '''Command motors to move the mallet to the desired cartesian position.
@@ -67,7 +70,8 @@ class AirHockeyTable:
 
         current_l, current_r = self.read_motor_currents()
 
-        line = f'{time.time_ns()},{actual_x},{actual_y},{self.target_x},{self.target_y},{current_l},{current_r}\n'
+        line = f'{time.time() - self.start_time},{actual_x*100},{actual_y*100},{self.target_x*100},' \
+            f'{self.target_y*100},{current_l},{current_r}\n'
         self.log_handle.write(line)
 
     def zero_encoders(self):
