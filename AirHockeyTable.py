@@ -113,3 +113,8 @@ class AirHockeyTable:
         voltage_r = self.motor_r.ReadMainBatteryVoltage(self.addr_r)[1] / 10
 
         return voltage_l, voltage_r
+
+    def set_max_current(self, max_current):
+        '''Set max motor current'''
+        self.motor_l.SetM1MaxCurrent(self.addr_l, max_current)
+        self.motor_r.SetM1MaxCurrent(self.addr_r, max_current)

@@ -6,6 +6,7 @@ from AirHockeyTable import AirHockeyTable
 controller = AirHockeyTable("COM4", "COM5")
 
 if __name__ == '__main__':
+    controller.set_max_current(10)
     controller.zero_encoders()
     controller.log_current_state()
 
