@@ -15,5 +15,3 @@ r_address = 0x85
 
 rc_l.ForwardM1(l_address,0)
 rc_r.BackwardM1(r_address,0)
-
-	

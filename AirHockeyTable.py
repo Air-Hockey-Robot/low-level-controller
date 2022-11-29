@@ -29,7 +29,8 @@ class AirHockeyTable:
         self.log_handle = open('data/' + log_file_name, 'a')
 
         header_line = 'time (s),actual x (cm),actual y (cm),target x (cm),target y (cm),' \
-            'left motor current (A),right motor current (A)\n'
+            'left motor current (A),right motor current (A),'\
+            'left motor controller voltage (V),right motor controller voltage (V)\n'
         self.log_handle.write(header_line)
     
     def _theta_to_xy(self, theta_l, theta_r):
@@ -43,8 +44,8 @@ class AirHockeyTable:
     def _xy_to_theta(self, x, y):
         '''Takes cartesian position of the mallet (x, y) in meters and converts
         it into motor angles in encoder ticks (2048 ticks per revolution)'''
-        theta_l = (x + y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / pi
-        theta_r = (x - y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / pi
+        theta_l = (x + y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / (2*pi)
+        theta_r = (x - y) / self.PULLEY_RADIUS * self.TICKS_PER_REV / (2*pi)
 
         return -theta_l, -theta_r
 
@@ -53,8 +54,8 @@ class AirHockeyTable:
         Position is interpreted in meters'''
         theta_l, theta_r = self._xy_to_theta(x, y)
 
-        self.motor_l.SpeedAccelDeccelPositionM1(self.addr_l, 300000, 250000, 300000, int(round(theta_l)), 0)
-        self.motor_r.SpeedAccelDeccelPositionM1(self.addr_r, 300000, 250000, 300000, int(round(theta_r)), 0)
+        self.motor_l.SpeedAccelDeccelPositionM1(self.addr_l, 400000, 350000, 400000, int(round(theta_l)), 0)
+        self.motor_r.SpeedAccelDeccelPositionM1(self.addr_r, 400000, 350000, 400000, int(round(theta_r)), 0)
 
         self.target_x = x
         self.target_y = y
@@ -70,8 +71,10 @@ class AirHockeyTable:
 
         current_l, current_r = self.read_motor_currents()
 
+        voltage_l, voltage_r = self.read_motor_controller_voltages()
+
         line = f'{time.time() - self.start_time},{actual_x*100},{actual_y*100},{self.target_x*100},' \
-            f'{self.target_y*100},{current_l},{current_r}\n'
+            f'{self.target_y*100},{current_l},{current_r},{voltage_l},{voltage_r}\n'
         self.log_handle.write(line)
 
     def zero_encoders(self):
@@ -102,3 +105,11 @@ class AirHockeyTable:
         current_l = self.motor_l.ReadCurrents(self.addr_l)[1] / 100
         current_r = self.motor_r.ReadCurrents(self.addr_r)[1] / 100
         return current_l, current_r
+
+
+    def read_motor_controller_voltages(self):
+        '''Reads motor controller input voltage'''
+        voltage_l = self.motor_l.ReadMainBatteryVoltage(self.addr_l)[1] / 10
+        voltage_r = self.motor_r.ReadMainBatteryVoltage(self.addr_r)[1] / 10
+
+        return voltage_l, voltage_r
