@@ -128,7 +128,7 @@ class AirHockeyTable:
         time.sleep(0.1)
 
         while abs(self.read_motor_currents()[1]) < current_threshold:
-            continue
+            self.log_current_state()
             
         self.motor_l.ForwardM1(self.addr_l, 0)
         self.motor_r.ForwardM1(self.addr_r, 0)
