@@ -118,3 +118,18 @@ class AirHockeyTable:
         '''Set max motor current'''
         self.motor_l.SetM1MaxCurrent(self.addr_l, max_current)
         self.motor_r.SetM1MaxCurrent(self.addr_r, max_current)
+
+    def home_table(self, speed, current_threshold):
+        '''Home the table and zero the econders'''
+
+        self.motor_l.ForwardM1(self.addr_l, speed)
+        self.motor_r.ForwardM1(self.addr_r, 0)
+
+        time.sleep(0.1)
+
+        while self.read_motor_currents()[1] < current_threshold:
+            continue
+            
+        self.motor_l.ForwardM1(self.addr_l, 0)
+        self.motor_r.ForwardM1(self.addr_r, 0)
+        self.zero_encoders()
