@@ -7,7 +7,7 @@ controller = AirHockeyTable("COM4", "COM5")
 
 if __name__ == '__main__':
     controller.set_max_current(10*100)
-    controller.zero_encoders()
+    controller.home_table(current_threshold=3, speed=5)
     controller.log_current_state()
 
     # controller.command_position(0.05, 0) # move 5 cm to the left
