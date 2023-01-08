@@ -11,17 +11,10 @@ def get_target_pos(a, t):
 
 
 if __name__ == '__main__':
-    controller.set_max_current(10*100)
-    controller.home_table(current_threshold=3, speed=5)
-    controller.log_current_state()
+    controller.set_max_current(10)
 
     # controller.command_position(0.05, 0) # move 5 cm to the left
     # controller.log_current_state()
-
-    #Inputs
-    period = 3 #s
-    angular_frequency = 2 * math.pi / period #rad/s
-    travel_distance = 0.10 #m
 
     #Stop motors
     controller.motor_l.ForwardM1(controller.addr_l,0)
@@ -31,8 +24,9 @@ if __name__ == '__main__':
     controller.set_left_motor_PID(200, 0, 5, 0, 0, -10000, 10000)
     controller.set_right_motor_PID(200, 0, 5, 0, 0, -10000, 10000)
 
-    time.sleep(3)
-    
+    time.sleep(1)
+    controller.zero_encoders()
+
     t0 = 0
     tf = 5
 
@@ -59,11 +53,17 @@ if __name__ == '__main__':
     b = np.array([y0, vy0, yf, vyf])
 
     ay = np.linalg.solve(mat, b)
+    # time.sleep(1)
+
+    # controller.home_table(position_threshold=100, x_speed=15, y_speed = 8)
+    # controller.log_current_state()
 
     start_time = time.time()
 
     print(ax)
     print(ay)
+
+    time.sleep(1000000)
 
     while(1):
         controller.log_current_state()
