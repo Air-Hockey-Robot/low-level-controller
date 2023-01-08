@@ -172,5 +172,5 @@ class AirHockeyTable:
     def check_path_bounds(self, x_coordinates, y_coordinates, x_min, x_max, y_min, y_max):
         '''Check whether a path is within the table's bounds'''
 
-        return((all(x < x_max for x in x_coordinates) and all(x > x_min for x in x_coordinates)) and \
-            (all(y < y_max for y in y_coordinates) and all(y > y_min for y in y_coordinates)))
+        return((all(x <= x_max for x in x_coordinates) and all(x >= x_min for x in x_coordinates)) and \
+            (all(y <= y_max for y in y_coordinates) and all(y >= y_min for y in y_coordinates)))

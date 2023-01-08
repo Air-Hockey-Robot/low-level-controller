@@ -19,14 +19,14 @@ if __name__ == '__main__':
     controller.motor_r.ForwardM1(controller.addr_r,0)
 
     #Set PID
-    controller.set_left_motor_PID(200, 0, 2, 0, 0, -10000, 20000)
-    controller.set_right_motor_PID(200, 0, 2, 0, 0, -10000, 20000)
+    controller.set_left_motor_PID(400, 0, 0, 0, 0, -10000, 20000)
+    controller.set_right_motor_PID(400, 0, 0, 0, 0, -10000, 20000)
 
     time.sleep(1)
     controller.zero_encoders()
 
     t0 = 0
-    tf = 1
+    tf = .5
 
     mat = np.array([[1, t0, t0**2, t0**3],
             [0, 1, 2*t0, 3*t0**2],
@@ -46,28 +46,34 @@ if __name__ == '__main__':
     y0 = start_position[1]
     yf = 0.5
     vy0 = 0
-    vyf = 0
+    vyf = 1
 
     b = np.array([y0, vy0, yf, vyf])
 
     ay = np.linalg.solve(mat, b)
     # time.sleep(1)
 
-    loop_count = 0
+    x_traj = [get_target_pos(ax, t) for t in np.arange(0,tf,0.001)]
+    y_traj = [get_target_pos(ay, t) for t in np.arange(0,tf,0.001)]    
+
+    if not controller.check_path_bounds(x_traj, y_traj, 0, 0.85, 0, 0.9):
+        print("PATH VIOLATES TABLE BOUNDS")
+        exit(0)
+
     start_time = time.time()
 
     while(time.time() < start_time + tf):
-        loop_count = loop_count + 1
         controller.log_current_state()
-
 
         current_time = time.time() - start_time
         x_pos = get_target_pos(ax, current_time)
         y_pos = get_target_pos(ay, current_time)
 
-        if loop_count % 10 == 0:
-            controller.command_position(x_pos, y_pos)
+        controller.command_position(x_pos, y_pos)
 
     #Stop motors
     controller.motor_l.ForwardM1(controller.addr_l,0)
     controller.motor_r.ForwardM1(controller.addr_r,0)
+
+    # for _ in range(50):
+    #     controller.log_current_state()
