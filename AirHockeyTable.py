@@ -115,23 +115,34 @@ class AirHockeyTable:
 
     def set_max_current(self, max_current):
         '''Set max motor current'''
-        self.motor_l.SetM1MaxCurrent(self.addr_l, max_current)
-        self.motor_r.SetM1MaxCurrent(self.addr_r, max_current)
+        self.motor_l.SetM1MaxCurrent(self.addr_l, max_current*100)
+        self.motor_r.SetM1MaxCurrent(self.addr_r, max_current*100)
 
     def home_table(self, speed, current_threshold):
         '''Home the table and zero the econders'''
+        threshold_count = 0
 
         self.motor_l.ForwardM1(self.addr_l, speed)
-        self.motor_r.ForwardM1(self.addr_r, 0)
+        self.motor_r.ForwardM1(self.addr_r, speed)
+        self.log_current_state()
 
         time.sleep(0.1)
 
-        while abs(self.read_motor_currents()[1]) < current_threshold:
+        while True:
             self.log_current_state()
             
-        self.motor_l.ForwardM1(self.addr_l, 0)
-        self.motor_r.ForwardM1(self.addr_r, 0)
-        self.zero_encoders()
+            if abs(self.read_motor_currents()[0]) > current_threshold:
+                threshold_count = threshold_count + 1
+
+                if threshold_count > 50:
+                    self.motor_l.ForwardM1(self.addr_l, 0)
+                    self.motor_r.ForwardM1(self.addr_r, 0)
+                    self.zero_encoders()
+                    print("Homed")
+                    return
+            else:
+                threshold_count = 0
+            
 
     def check_path_bounds(self, x_coordinates, y_coordinates, x_min, x_max, y_min, y_max):
         '''Check whether a path is within the table's bounds'''

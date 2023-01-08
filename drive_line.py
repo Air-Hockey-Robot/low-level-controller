@@ -6,9 +6,7 @@ from AirHockeyTable import AirHockeyTable
 controller = AirHockeyTable("COM4", "COM5")
 
 if __name__ == '__main__':
-    controller.set_max_current(10*100)
-    controller.home_table(current_threshold=3, speed=5)
-    controller.log_current_state()
+    controller.set_max_current(10)
 
     # controller.command_position(0.05, 0) # move 5 cm to the left
     # controller.log_current_state()
@@ -27,6 +25,12 @@ if __name__ == '__main__':
     controller.set_right_motor_PID(200, 0, 5, 0, 0, -10000, 10000)
 
     time.sleep(3)
+
+    controller.home_table(current_threshold=10, speed=20)
+    controller.log_current_state()
+
+    time.sleep(10000)
+
     start_time = time.time()
 
 
