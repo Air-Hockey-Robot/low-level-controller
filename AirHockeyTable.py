@@ -82,6 +82,13 @@ class AirHockeyTable:
         self.motor_l.SetEncM1(self.addr_l, 0)
         self.motor_r.SetEncM1(self.addr_r, 0)
 
+    def read_encoders(self):
+        return self.motor_l.ReadEncM1(self.addr_l)[1], self.motor_r.ReadEncM1(self.addr_r)[1]
+    
+    def read_position(self):
+        encoder_values = self.read_encoders()
+        return self._theta_to_xy(encoder_values[0], encoder_values[1])
+
     def set_left_motor_PID(self, kp, ki, kd, kimax, deadzone, min, max):
         '''Sets PID gains for position controller of left motor'''
         self.motor_l.SetM1PositionPID(self.addr_l, kp, ki, kd, kimax, deadzone, min, max)
