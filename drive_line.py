@@ -9,6 +9,16 @@ controller = AirHockeyTable("COM4", "COM5")
 def get_target_pos(a, t):
     return a[0] + a[1]*t + a[2]*t**2 + a[3]*t**3
 
+def get_intermediate_point(x, y, vx, vy, straight_length):
+    final_velocity_magnitude = np.sqrt(vx**2 + vy**2)
+    reverse_x_component = -vx / final_velocity_magnitude * straight_length
+    reverse_y_component = -vy / final_velocity_magnitude * straight_length
+    
+    intermediate_x = x + reverse_x_component
+    intermediate_y = y + reverse_y_component
+
+    return intermediate_x, intermediate_y
+
 
 if __name__ == '__main__':
     controller.set_max_current(20)
