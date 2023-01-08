@@ -106,7 +106,6 @@ class AirHockeyTable:
         current_r = self.motor_r.ReadCurrents(self.addr_r)[1] / 100
         return current_l, current_r
 
-
     def read_motor_controller_voltages(self):
         '''Reads motor controller input voltage'''
         voltage_l = self.motor_l.ReadMainBatteryVoltage(self.addr_l)[1] / 10
@@ -133,3 +132,9 @@ class AirHockeyTable:
         self.motor_l.ForwardM1(self.addr_l, 0)
         self.motor_r.ForwardM1(self.addr_r, 0)
         self.zero_encoders()
+
+    def check_path_bounds(self, x_coordinates, y_coordinates, x_min, x_max, y_min, y_max):
+        '''Check whether a path is within the table's bounds'''
+
+        return((all(x < x_max for x in x_coordinates) and all(x > x_min for x in x_coordinates)) and \
+            (all(y < y_max for y in y_coordinates) and all(y > y_min for y in y_coordinates)))
