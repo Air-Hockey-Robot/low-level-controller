@@ -24,9 +24,9 @@ if __name__ == '__main__':
     controller.set_left_motor_PID(200, 0, 5, 0, 0, -10000, 10000)
     controller.set_right_motor_PID(200, 0, 5, 0, 0, -10000, 10000)
 
-    time.sleep(3)
+    time.sleep(1)
 
-    controller.home_table(current_threshold=10, speed=20)
+    controller.home_table(position_threshold=100, x_speed=15, y_speed = 8)
     controller.log_current_state()
 
     time.sleep(10000)

@@ -118,31 +118,49 @@ class AirHockeyTable:
         self.motor_l.SetM1MaxCurrent(self.addr_l, max_current*100)
         self.motor_r.SetM1MaxCurrent(self.addr_r, max_current*100)
 
-    def home_table(self, speed, current_threshold):
+    def home_table(self, x_speed, y_speed, position_threshold):
         '''Home the table and zero the econders'''
         threshold_count = 0
 
-        self.motor_l.ForwardM1(self.addr_l, speed)
-        self.motor_r.ForwardM1(self.addr_r, speed)
+        self.motor_l.ForwardM1(self.addr_l, x_speed)
+        self.motor_r.ForwardM1(self.addr_r, x_speed)
         self.log_current_state()
-
-        time.sleep(0.1)
+        time.sleep(0.5)
 
         while True:
             self.log_current_state()
-            
-            if abs(self.read_motor_currents()[0]) > current_threshold:
-                threshold_count = threshold_count + 1
+            last_encoder_pos = self.motor_l.ReadEncM1(self.addr_l)[1]
+            time.sleep(0.1)
 
-                if threshold_count > 50:
-                    self.motor_l.ForwardM1(self.addr_l, 0)
-                    self.motor_r.ForwardM1(self.addr_r, 0)
-                    self.zero_encoders()
-                    print("Homed")
-                    return
-            else:
-                threshold_count = 0
+            if abs(self.motor_l.ReadEncM1(self.addr_l)[1] - last_encoder_pos) < position_threshold:
+                self.motor_l.ForwardM1(self.addr_l, 0)
+                self.motor_r.ForwardM1(self.addr_r, 0)
+                print("Homed in X")
+                break
+        
             
+        self.motor_l.ForwardM1(self.addr_l, y_speed)
+        self.motor_r.BackwardM1(self.addr_r, y_speed)
+        self.log_current_state()
+        time.sleep(0.5)
+
+        while True:
+            self.log_current_state()
+            last_encoder_pos = self.motor_l.ReadEncM1(self.addr_l)[1]
+            time.sleep(0.1)
+
+            if abs(self.motor_l.ReadEncM1(self.addr_l)[1] - last_encoder_pos) < position_threshold:
+                self.motor_l.ForwardM1(self.addr_l, 0)
+                self.motor_r.ForwardM1(self.addr_r, 0)
+                print("Homed in Y")
+                break
+
+        self.motor_l.ForwardM1(self.addr_l, x_speed)
+        time.sleep(0.5)
+        self.motor_l.ForwardM1(self.addr_l, 0)
+        self.zero_encoders()
+        print("Fully Homed")
+
 
     def check_path_bounds(self, x_coordinates, y_coordinates, x_min, x_max, y_min, y_max):
         '''Check whether a path is within the table's bounds'''
