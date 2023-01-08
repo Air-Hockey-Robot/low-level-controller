@@ -54,8 +54,8 @@ class AirHockeyTable:
         Position is interpreted in meters'''
         theta_l, theta_r = self._xy_to_theta(x, y)
 
-        self.motor_l.SpeedAccelDeccelPositionM1(self.addr_l, 400000, 350000, 400000, int(round(theta_l)), 0)
-        self.motor_r.SpeedAccelDeccelPositionM1(self.addr_r, 400000, 350000, 400000, int(round(theta_r)), 0)
+        self.motor_l.SpeedAccelDeccelPositionM1(self.addr_l, 400000, 350000, 400000, int(round(theta_l)), 1)
+        self.motor_r.SpeedAccelDeccelPositionM1(self.addr_r, 400000, 350000, 400000, int(round(theta_r)), 1)
 
         self.target_x = x
         self.target_y = y
@@ -131,35 +131,35 @@ class AirHockeyTable:
 
         self.motor_l.ForwardM1(self.addr_l, x_speed)
         self.motor_r.ForwardM1(self.addr_r, x_speed)
-        self.log_current_state()
+        # self.log_current_state()
         time.sleep(0.5)
 
         while True:
-            self.log_current_state()
+            # self.log_current_state()
             last_encoder_pos = self.motor_l.ReadEncM1(self.addr_l)[1]
             time.sleep(0.1)
 
             if abs(self.motor_l.ReadEncM1(self.addr_l)[1] - last_encoder_pos) < position_threshold:
                 self.motor_l.ForwardM1(self.addr_l, 0)
                 self.motor_r.ForwardM1(self.addr_r, 0)
-                print("Homed in X")
+                # print("Homed in X")
                 break
         
             
         self.motor_l.ForwardM1(self.addr_l, y_speed)
         self.motor_r.BackwardM1(self.addr_r, y_speed)
-        self.log_current_state()
+        # self.log_current_state()
         time.sleep(0.5)
 
         while True:
-            self.log_current_state()
+            # self.log_current_state()
             last_encoder_pos = self.motor_l.ReadEncM1(self.addr_l)[1]
             time.sleep(0.1)
 
             if abs(self.motor_l.ReadEncM1(self.addr_l)[1] - last_encoder_pos) < position_threshold:
                 self.motor_l.ForwardM1(self.addr_l, 0)
                 self.motor_r.ForwardM1(self.addr_r, 0)
-                print("Homed in Y")
+                # print("Homed in Y")
                 break
 
         self.motor_l.ForwardM1(self.addr_l, x_speed)
