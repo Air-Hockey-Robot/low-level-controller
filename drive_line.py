@@ -7,9 +7,10 @@ import numpy as np
 controller = AirHockeyTable("COM4", "COM5")
 
 def get_target_pos(a, t):
-    return a[0] + a[1]*t + a[2]*t**2 + a[3]*t**3
+    return sum([c * t**i for i, c in enumerate(a)])
+    # return a[0] + a[1]*t + a[2]*t**2 + a[3]*t**3
 
-def get_intermediate_point(x, y, vx, vy, straight_length):
+def get_intermediate_point(x, y, vx, vy, final_time, straight_length):
     final_velocity_magnitude = np.sqrt(vx**2 + vy**2)
     reverse_x_component = -vx / final_velocity_magnitude * straight_length
     reverse_y_component = -vy / final_velocity_magnitude * straight_length
@@ -17,7 +18,9 @@ def get_intermediate_point(x, y, vx, vy, straight_length):
     intermediate_x = x + reverse_x_component
     intermediate_y = y + reverse_y_component
 
-    return intermediate_x, intermediate_y
+    intermediate_t = final_time - straight_length / final_velocity_magnitude
+
+    return intermediate_x, intermediate_y, intermediate_t
 
 
 if __name__ == '__main__':
@@ -36,39 +39,47 @@ if __name__ == '__main__':
     controller.zero_encoders()
 
     t0 = 0
-    tf = .5
-
-    mat = np.array([[1, t0, t0**2, t0**3],
-            [0, 1, 2*t0, 3*t0**2],
-            [1, tf, tf**2, tf**3],
-            [0, 1, 2*tf, 3*tf**2]])
-
     start_position = controller.read_position()
     x0 = start_position[0]
-    xf = 0.5
-    vx0 = 0
-    vxf = 0
-
-    b = np.array([x0, vx0, xf, vxf])
-
-    ax = np.linalg.solve(mat, b)
-
     y0 = start_position[1]
-    yf = 0.5
+    vx0 = 0
     vy0 = 0
+
+    tf = .5
+    xf = 0.5
+    yf = 0.5
+    vxf = 0
     vyf = 1
 
-    b = np.array([y0, vy0, yf, vyf])
+    x1, y1, t1 = get_intermediate_point(xf, yf, vxf, vyf, 0.1)
 
-    ay = np.linalg.solve(mat, b)
+    mat = np.array([[1, t0, t0**2, t0**3, t0**4, t0**5],
+        [0, 1, 2*t0, 3*t0**2, 4*t0**3, 5*t0**4],
+        [1, t1, t1**2, t1**3, t1**4, t1**5],
+        [0, 1, 2*t1, 3*t1**2, 4*t1**3, 5*t1**4],
+        [1, tf, tf**2, tf**3, tf**4, tf**5],
+        [0, 1, 2*tf, 3*tf**2, 4*tf**3, 5*tf**4]])
+
+    bx = np.array([x0, vx0, xf, vxf])
+
+    ax = np.linalg.solve(mat, bx)
+
+    by = np.array([y0, vy0, yf, vyf])
+
+    ay = np.linalg.solve(mat, by)
     # time.sleep(1)
 
     x_traj = [get_target_pos(ax, t) for t in np.arange(0,tf,0.001)]
-    y_traj = [get_target_pos(ay, t) for t in np.arange(0,tf,0.001)]    
+    y_traj = [get_target_pos(ay, t) for t in np.arange(0,tf,0.001)]
+
+    from matplotlib import pyplot as plt
+    plt.plot(x_traj, y_traj)
 
     if not controller.check_path_bounds(x_traj, y_traj, 0, 0.85, 0, 0.9):
         print("PATH VIOLATES TABLE BOUNDS")
         exit(0)
+
+    time.sleep(100000)
 
     start_time = time.time()
 
